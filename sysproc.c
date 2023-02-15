@@ -42,17 +42,31 @@ sys_getpid(void)
   return myproc()->pid;
 }
 
+/* old sbrk system call */
+// int
+// sys_sbrk(void)
+// {
+//   int addr;
+//   int n;
+
+//   if(argint(0, &n) < 0)
+//     return -1;
+//   addr = myproc()->sz;
+//   if(growproc(n) < 0)
+//     return -1;
+//   return addr;
+// }
+
 int
 sys_sbrk(void)
 {
   int addr;
   int n;
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
+  myproc()->sz += n;
   return addr;
 }
 

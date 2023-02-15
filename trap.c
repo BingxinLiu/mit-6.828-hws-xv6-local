@@ -7,6 +7,7 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+// #include <sys/types.h>
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -85,6 +86,25 @@ trap(struct trapframe *tf)
       cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
               tf->trapno, cpuid(), tf->eip, rcr2());
       panic("trap");
+    }
+
+    if(tf->trapno == T_PGFLT) {
+      uint addr = rcr2();
+      char *mem = kalloc();
+      if (mem != 0) {
+        if(myproc()->sz > addr && (addr + PGSIZE) > addr) {
+          int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+          if(mappages(myproc()->pgdir, (void *) PGROUNDDOWN(addr), PGSIZE, V2P(mem), PTE_W | PTE_U) == 0) 
+            return;
+          else
+            cprintf("mappages error\n");
+        } else {
+          cprintf("address overflow or access limited address\n");
+        }
+      }
+      else {
+        cprintf("use out of memor\n");
+      }
     }
     // In user space, assume process misbehaved.
     cprintf("pid %d %s: trap %d err %d on cpu %d "
