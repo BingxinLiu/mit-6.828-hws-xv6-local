@@ -55,6 +55,43 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
+    if(myproc() != 0 && (tf->cs & 3) == 3)
+    {
+      if (myproc()->alarmticks > 0)
+        myproc()->passedticks++;
+      if (myproc()->alarmhandler_returned
+              && myproc()->alarmticks > 0
+              && myproc()->passedticks >= myproc()->alarmticks)
+      {
+        myproc()->passedticks = 0;
+        tf->esp -= 4;
+        *(uint*)(tf->esp) = tf->eip;
+        // Adde for optional challenge
+        // tf->esp -= 4;
+        // *(uint*)(tf->esp) = 0x90c308c4;
+        // tf->esp -= 4;
+        // *(uint*)(tf->esp) = 0x83585a59;
+        tf->esp -= 4;
+        *(uint*)(tf->esp) = tf->eax;
+        tf->esp -= 4;
+        *(uint*)(tf->esp) = tf->edx;
+        tf->esp -= 4;
+        *(uint*)(tf->esp) = tf->ecx;
+        // Add for jump to restore caller-saved registers
+        tf->esp -= 4;
+        *(uint*)(tf->esp) = 0x308;
+        // tf->esp -= 4;
+        // *(uint*)(tf->esp) = tf->esp+0x10;
+        // Add end, code injection
+        tf->eip = (uint)(myproc()->alarmhandler);
+        myproc()->alarmhandler_returned = 0;
+      }
+      // debug
+      // else {
+      //   cprintf("alarmticks: %d; alarm passed ticks: %d.\n", myproc()->alarmticks, myproc()->passedticks);
+      // }
+
+    }
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:

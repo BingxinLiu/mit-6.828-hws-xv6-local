@@ -30,3 +30,6 @@ SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(date)
+SYSCALL(alarm)
+SYSCALL(restore_caller_saved_registers)
+

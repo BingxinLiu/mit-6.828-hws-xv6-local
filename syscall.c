@@ -104,6 +104,7 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_date(void);
+extern int sys_alarm(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -128,6 +129,7 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_date]    sys_date,
+[SYS_alarm]   sys_alarm,
 };
 
 /* hw3 system calls
@@ -165,12 +167,39 @@ syscall(void)
 
   num = curproc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    curproc->tf->eax = syscalls[num]();
+      curproc->tf->eax = syscalls[num]();
+
     // hw3 system calls
     // cprintf("%s -> %d\n", syscall_name[num], curproc->tf->eax);
-  } else {
+  }
+    // for hw5 xv6 system alarm
+  else if(num == SYS_restore_caller_saved_registers) {
+    curproc->alarmhandler_returned = 1;
+    curproc->tf->eax = *(uint*) curproc->tf->esp+8;
+    curproc->tf->edx = *(uint*) curproc->tf->esp+4;
+    curproc->tf->ecx = *(uint*) curproc->tf->esp;
+    // curproc->tf->eip = *(uint*) curproc->tf->esp+0xc;
+    curproc->tf->esp += 0xc;
+  }
+  else {
     cprintf("%d %s: unknown sys call %d\n",
             curproc->pid, curproc->name, num);
     curproc->tf->eax = -1;
   }
+}
+
+int
+sys_alarm(void)
+{
+    int ticks;
+    void (*handler)();
+
+    if(argint(0, &ticks) < 0)
+        return -1;
+    if(argptr(1, (char**)&handler, 1) < 0)
+        return -1;
+    if(ticks <= 0) panic("Systemcall alarm should not have a ticks less than or equal to zero.\n");
+    myproc()->alarmticks = ticks;
+    myproc()->alarmhandler = handler;
+    return 0;
 }

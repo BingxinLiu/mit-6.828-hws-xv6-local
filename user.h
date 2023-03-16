@@ -24,6 +24,11 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int date(struct rtcdate*);
+int alarm(int ticks, void (*handler)());
+int restore_caller_saved_registers(void);
+
+// export __caller_saved_registers:
+// int __caller_saved_registers(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
