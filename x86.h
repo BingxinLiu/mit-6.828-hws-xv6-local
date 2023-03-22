@@ -1,5 +1,6 @@
 // Routines to let C code use special x86 instructions.
 
+// read and return a byte from port
 static inline uchar
 inb(ushort port)
 {
@@ -9,6 +10,7 @@ inb(ushort port)
   return data;
 }
 
+// read
 static inline void
 insl(int port, void *addr, int cnt)
 {
@@ -105,12 +107,14 @@ loadgs(ushort v)
   asm volatile("movw %0, %%gs" : : "r" (v));
 }
 
+/* clear interrupt flag */
 static inline void
 cli(void)
 {
   asm volatile("cli");
 }
 
+/* set interrupt flag */
 static inline void
 sti(void)
 {

@@ -100,7 +100,8 @@ holding(struct spinlock *lock)
 // Pushcli/popcli are like cli/sti except that they are matched:
 // it takes two popcli to undo two pushcli.  Also, if interrupts
 // are off, then pushcli, popcli leaves them off.
-
+// lbx:
+// if ncli == 0, save interrupt status. disable interrput. # of cli(ncli) ++
 void
 pushcli(void)
 {
@@ -113,6 +114,10 @@ pushcli(void)
   mycpu()->ncli += 1;
 }
 
+// lbx:
+// panic if interrput is enabled
+// panic if ncli < 0
+// enable interrupt if ncli == 0 && intena(interrupt enabled before 1st call to pushcli)
 void
 popcli(void)
 {
